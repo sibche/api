@@ -77,9 +77,9 @@ class DingoServiceProvider extends ServiceProvider
      */
     protected function registerConfig()
     {
-        $this->mergeConfigFrom(realpath(__DIR__.'/../../config/api.php'), 'api');
+        $this->mergeConfigFrom(realpath(__DIR__ . '/../../config/api.php'), 'api');
 
-        if (! $this->app->runningInConsole() && empty($this->config('prefix')) && empty($this->config('domain'))) {
+        if (!$this->app->runningInConsole() && empty($this->config('prefix')) && empty($this->config('domain'))) {
             throw new RuntimeException('Unable to boot ApiServiceProvider, configure an API domain or prefix.');
         }
     }
@@ -106,7 +106,7 @@ class DingoServiceProvider extends ServiceProvider
         ];
 
         foreach ($serviceAliases as $key => $aliases) {
-            foreach ((array) $aliases as $alias) {
+            foreach ((array)$aliases as $alias) {
                 $this->app->alias($key, $alias);
             }
         }
@@ -153,7 +153,7 @@ class DingoServiceProvider extends ServiceProvider
     protected function registerAuth()
     {
         $this->app->singleton('api.auth', function ($app) {
-            return new Auth($app[\Dingo\Api\Routing\Router::class], $app, $this->config('auth'));
+            return new Auth($app[\Dingo\Api\Routing\Router::class], $app, $this->config('auth'), $this->config('auth_cache'));
         });
     }
 

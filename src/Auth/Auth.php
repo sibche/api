@@ -44,21 +44,26 @@ class Auth
      * @var \Illuminate\Auth\GenericUser|\Illuminate\Database\Eloquent\Model
      */
     protected $user;
+    /**
+     * @var bool
+     */
+    private $authCache;
 
     /**
      * Create a new auth instance.
      *
-     * @param \Dingo\Api\Routing\Router       $router
+     * @param \Dingo\Api\Routing\Router $router
      * @param \Illuminate\Container\Container $container
-     * @param array                           $providers
+     * @param array $providers
      *
      * @return void
      */
-    public function __construct(Router $router, Container $container, array $providers)
+    public function __construct(Router $router, Container $container, array $providers, $authCache = false)
     {
         $this->router = $router;
         $this->container = $container;
         $this->providers = $providers;
+        $this->authCache = $authCache;
     }
 
     /**
@@ -66,9 +71,9 @@ class Auth
      *
      * @param array $providers
      *
+     * @return mixed
      * @throws \Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException
      *
-     * @return mixed
      */
     public function authenticate(array $providers = [])
     {
@@ -83,7 +88,8 @@ class Auth
 
                 $this->providerUsed = $provider;
 
-                return $this->user = $user;
+                $this->setUser($user);
+                return $user;
             } catch (UnauthorizedHttpException $exception) {
                 $exceptionStack[] = $exception;
             } catch (BadRequestHttpException $exception) {
@@ -101,9 +107,9 @@ class Auth
      *
      * @param array $exceptionStack
      *
+     * @return void
      * @throws \Symfony\Component\HttpKernel\Exception\UnauthorizedHttpException
      *
-     * @return void
      */
     protected function throwUnauthorizedException(array $exceptionStack)
     {
@@ -143,12 +149,12 @@ class Auth
     {
         if ($this->user) {
             return $this->user;
-        } elseif (! $authenticate) {
+        } elseif (!$authenticate) {
             return;
         }
 
         try {
-            return $this->user = $this->authenticate();
+            return $this->authenticate();
         } catch (Exception $exception) {
             return;
         }
@@ -175,7 +181,8 @@ class Auth
      */
     public function setUser($user)
     {
-        $this->user = $user;
+        if ($this->authCache)
+            $this->user = $user;
 
         return $this;
     }
@@ -189,7 +196,7 @@ class Auth
      */
     public function check($authenticate = false)
     {
-        return ! is_null($this->user($authenticate));
+        return !is_null($this->user($authenticate));
     }
 
     /**
@@ -205,7 +212,7 @@ class Auth
     /**
      * Extend the authentication layer with a custom provider.
      *
-     * @param string          $key
+     * @param string $key
      * @param object|callable $provider
      *
      * @return void
